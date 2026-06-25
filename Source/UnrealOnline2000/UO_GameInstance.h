@@ -6,6 +6,37 @@
 #include "Engine/GameInstance.h"
 #include "UO_GameInstance.generated.h"
 
+// Struct for King of the Hill Session Settings
+USTRUCT(BlueprintType)
+struct FKOTHSessionSettings
+{
+	GENERATED_BODY()
+
+	UPROPERTY(BlueprintReadWrite, Category="Session")
+	FString SessionName = TEXT("King of the Hill");
+	
+	// Points to Win
+	UPROPERTY(BlueprintReadWrite, Category="Session")
+	int32 ScoreLimit = 100;
+
+	// Max Players
+	UPROPERTY(BlueprintReadWrite, Category="Session")
+	int32 MaxPlayers = 4;
+};
+
+// Struct for Displaying Find Server Information in the Main Menu
+USTRUCT(BlueprintType)
+struct FSessionDisplayInfo
+{
+	GENERATED_BODY()
+
+	UPROPERTY(BlueprintReadOnly) FString DisplayName;
+	UPROPERTY(BlueprintReadOnly) int32 ScoreLimit;
+	UPROPERTY(BlueprintReadOnly) int32 MaxPlayers;
+	UPROPERTY(BlueprintReadOnly) int32 CurrentPlayers;
+	UPROPERTY(BlueprintReadOnly) int32 ResultIndex;
+};
+
 /**
  * 
  */
@@ -18,6 +49,11 @@ protected:
 	IOnlineSessionPtr SessionInterface;
 	virtual void Init() override;
 
+	DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnSessionsFound);
+
+	UPROPERTY(BlueprintAssignable, Category = "Sessions")
+	FOnSessionsFound OnSessionsFound;
+
 	void OnCreateSessionComplete(FName _sessionName, bool _bSuccess);
 	void OnFindSessionsComplete(bool _bSuccess);
 	void OnJoinSessionComplete(FName _sessionName, EOnJoinSessionCompleteResult::Type _result);
@@ -26,17 +62,15 @@ protected:
 	UFUNCTION()
 	void NetworkFailureOccurred(UWorld* _world, UNetDriver* _netDriver, ENetworkFailure::Type _failureType, const FString& _errorString);
 
-
-
 	TSharedPtr<FOnlineSessionSettings> SessionSettings;
 	TSharedPtr<FOnlineSessionSearch> SessionSearch;
 
-	bool HostSession(TSharedPtr<const FUniqueNetId> _userID, FName _sessionName, bool _bIsLAN, bool _bIsPresence, int32 _maxNumPlayers);
+	bool HostSession(FKOTHSessionSettings _HostSettings, bool _bIsLAN);
 	void FindSessions(TSharedPtr<const FUniqueNetId> _userID, bool _bIsLAN);
 	bool JoinSession(TSharedPtr<const FUniqueNetId> _userID, FName _sessionName, const FOnlineSessionSearchResult& _searchResult);
 	
 	UFUNCTION(BlueprintCallable)
-	void StartGame(bool _bLAN);
+	void StartGame(FKOTHSessionSettings _HostSettings, bool _bLAN);
 
 	UFUNCTION(BlueprintCallable)
 	void FindGames(bool _bLAN);
@@ -46,4 +80,8 @@ protected:
 
 	UFUNCTION(BlueprintCallable)
 	void DestroySession();
+
+public:
+	UFUNCTION(BlueprintCallable, Category="Sessions")
+	TArray<FSessionDisplayInfo> GetSessionDisplayInfos();
 };

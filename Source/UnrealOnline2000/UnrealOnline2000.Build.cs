@@ -20,6 +20,7 @@ public class UnrealOnline2000 : ModuleRules
 			"UMG",
 			"Slate",
 			"OnlineSubsystem",
+			//"OnlineSubsystemUtils",
 			"OnlineSubsystemSteam",
 			"NetCore"
 		});

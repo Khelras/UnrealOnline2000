@@ -2,7 +2,7 @@
 
 
 #include "UO_GameInstance.h"
-#include <Online/OnlineSessionNames.h>
+#include "Online/OnlineSessionNames.h"
 
 void UUO_GameInstance::Init()
 {
@@ -32,6 +32,10 @@ void UUO_GameInstance::OnCreateSessionComplete(FName _sessionName, bool _bSucces
 	{
 		FString LevelOptions = "Lvl_ThirdPerson?listen";
 		if (SessionSettings->bIsLANMatch == true) LevelOptions.Append("?bIsLanMatch=1");
+
+		GEngine->AddOnScreenDebugMessage(-1, 10.f, FColor::Green,
+			FString::Printf(TEXT("Session created! Travelling with: %s"), *LevelOptions));
+
 		GetWorld()->ServerTravel(LevelOptions);
 	}
 }
@@ -48,12 +52,21 @@ void UUO_GameInstance::OnFindSessionsComplete(bool _bSuccess)
 		GEngine->AddOnScreenDebugMessage(-1, 10.0f, FColor::Red,
 			FString::Printf(TEXT("Session Number: %d | Session Name: %s"), i + 1, *SessionSearch->SearchResults[i].Session.OwningUserName));
 	}
+
+	OnSessionsFound.Broadcast();
 }
 
 void UUO_GameInstance::OnJoinSessionComplete(FName _sessionName, EOnJoinSessionCompleteResult::Type _result)
 {
 	GEngine->AddOnScreenDebugMessage(-1, 10.0f, FColor::Red,
 			FString::Printf(TEXT("OnJoinSessionComplete %s, %d"), *_sessionName.ToString(), static_cast<int32>(_result)));
+	
+	if (_result != EOnJoinSessionCompleteResult::Success)
+	{
+		GEngine->AddOnScreenDebugMessage(-1, 10.0f, FColor::Red, TEXT("Join FAILED!"));
+		return;
+	}
+
 	if (SessionInterface.IsValid() == false) return;
 
 	APlayerController* const PlayerController = GetFirstLocalPlayerController();
@@ -62,7 +75,15 @@ void UUO_GameInstance::OnJoinSessionComplete(FName _sessionName, EOnJoinSessionC
 
 	if (PlayerController && SessionInterface->GetResolvedConnectString(_sessionName, TravelURL))
 	{
+		GEngine->AddOnScreenDebugMessage(-1, 10.f, FColor::Green,
+			FString::Printf(TEXT("Travelling to: %s"), *TravelURL));
+
 		PlayerController->ClientTravel(TravelURL, ETravelType::TRAVEL_Absolute);
+	}
+	else
+	{
+		GEngine->AddOnScreenDebugMessage(-1, 10.f, FColor::Red,
+			TEXT("GetResolvedConnectString FAILED, TravelURL is empty"));
 	}
 }
 
@@ -77,21 +98,30 @@ void UUO_GameInstance::OnDestroySessionComplete(FName _sessionName, bool _bSucce
 
 void UUO_GameInstance::NetworkFailureOccurred(UWorld* _world, UNetDriver* _netDriver, ENetworkFailure::Type _failureType, const FString& _errorString)
 {
-	// Destroy SEssion on Network Failure
-	DestroySession();
+	GEngine->AddOnScreenDebugMessage(-1, 10.f, FColor::Red,
+		FString::Printf(TEXT("NetworkFailure: %s"), *_errorString));
+
+	// Destroy if a Session Exists
+	if (SessionInterface.IsValid())
+	{
+		auto ExistingSession = SessionInterface->GetNamedSession(NAME_GameSession);
+		if (ExistingSession != nullptr)
+		{
+			DestroySession();
+		}
+	}
 }
 
-bool UUO_GameInstance::HostSession(TSharedPtr<const FUniqueNetId> _userID, FName _sessionName, bool _bIsLAN, bool _bIsPresence, int32 _maxNumPlayers)
+bool UUO_GameInstance::HostSession(FKOTHSessionSettings _HostSettings, bool _bIsLAN)
 {
 	if (SessionInterface.IsValid() == false) return false;
-	if (_userID.IsValid() == false) return false;
 
-	SessionSettings = MakeShareable<FOnlineSessionSettings>(new FOnlineSessionSettings());
+	SessionSettings = MakeShareable(new FOnlineSessionSettings());
 
 	// Set the Session Settings
 	SessionSettings->bIsLANMatch = _bIsLAN;
-	SessionSettings->bUsesPresence = _bIsPresence;
-	SessionSettings->NumPublicConnections = _maxNumPlayers;
+	SessionSettings->bUsesPresence = true;
+	SessionSettings->NumPublicConnections = _HostSettings.MaxPlayers;
 	SessionSettings->NumPrivateConnections = 0;
 	SessionSettings->bAllowInvites = true;
 	SessionSettings->bAllowJoinInProgress = true;
@@ -100,17 +130,18 @@ bool UUO_GameInstance::HostSession(TSharedPtr<const FUniqueNetId> _userID, FName
 	SessionSettings->bAllowJoinViaPresenceFriendsOnly = false;
 	SessionSettings->bUseLobbiesIfAvailable = true;
 
-	// Set the Session Map
+	// Client will read these Custom Keys from FOnlineSessionSearchResult
 	SessionSettings->Set(SEARCH_KEYWORDS, FString("Custom"), EOnlineDataAdvertisementType::ViaOnlineService);
+	SessionSettings->Set(FName("SESSION_DISPLAY_NAME"), _HostSettings.SessionName, EOnlineDataAdvertisementType::ViaOnlineServiceAndPing);
+	SessionSettings->Set(FName("SCORE_LIMIT"), _HostSettings.ScoreLimit, EOnlineDataAdvertisementType::ViaOnlineServiceAndPing);
 
-	// Create the Session
-	return SessionInterface->CreateSession(*_userID, _sessionName, *SessionSettings);
+	return SessionInterface->CreateSession(0, NAME_GameSession, *SessionSettings);
 }
 
 void UUO_GameInstance::FindSessions(TSharedPtr<const FUniqueNetId> _userID, bool _bIsLAN)
 {
-	if (SessionInterface.IsValid() == false) OnFindSessionsComplete(false);
-	if (_userID.IsValid() == false) OnFindSessionsComplete(false);
+	if (SessionInterface.IsValid() == false) { OnFindSessionsComplete(false); return; }
+	if (_userID.IsValid() == false) { OnFindSessionsComplete(false); return; }
 
 	SessionSearch = MakeShareable(new FOnlineSessionSearch);
 
@@ -119,7 +150,7 @@ void UUO_GameInstance::FindSessions(TSharedPtr<const FUniqueNetId> _userID, bool
 	SessionSearch->MaxSearchResults = 10000;
 	SessionSearch->PingBucketSize = 50;
 	
-	// Set the Session Search Query Settings
+	// Set the Session Search Query Settings (for Steam)
 	SessionSearch->QuerySettings.Set(SEARCH_LOBBIES, true, EOnlineComparisonOp::Equals);
 	SessionSearch->QuerySettings.Set(SEARCH_KEYWORDS, FString("Custom"), EOnlineComparisonOp::Equals);
 
@@ -134,11 +165,11 @@ bool UUO_GameInstance::JoinSession(TSharedPtr<const FUniqueNetId> _userID, FName
 	return SessionInterface->JoinSession(*_userID, _sessionName, _searchResult);
 }
 
-void UUO_GameInstance::StartGame(bool _bLAN)
+void UUO_GameInstance::StartGame(FKOTHSessionSettings _HostSettings, bool _bLAN)
 {
 	ULocalPlayer* const Player = GetFirstGamePlayer();
 
-	HostSession(Player->GetPreferredUniqueNetId().GetUniqueNetId(), NAME_GameSession, _bLAN, true, 4);
+	HostSession(_HostSettings, _bLAN);
 }
 
 void UUO_GameInstance::FindGames(bool _bLAN)
@@ -166,4 +197,29 @@ void UUO_GameInstance::DestroySession()
 	if (SessionInterface.IsValid() == false) return;
 
 	SessionInterface->DestroySession(NAME_GameSession);
+}
+
+TArray<FSessionDisplayInfo> UUO_GameInstance::GetSessionDisplayInfos()
+{
+	TArray<FSessionDisplayInfo> Out;
+	if (SessionSearch.IsValid() == false) return Out;
+
+	// Loop through all the found Sessions
+	for (int32 i = 0; i < SessionSearch->SearchResults.Num(); i++)
+	{
+		// Construct the Session Info as an FSessionDisplayInfo Struct
+		const FOnlineSessionSearchResult& Result = SessionSearch->SearchResults[i];
+		FSessionDisplayInfo Info;
+		Info.ResultIndex = i;
+		Info.CurrentPlayers = Result.Session.SessionSettings.NumPublicConnections - Result.Session.NumOpenPublicConnections;
+		Info.MaxPlayers = Result.Session.SessionSettings.NumPublicConnections;
+		Result.Session.SessionSettings.Get(FName("SESSION_DISPLAY_NAME"), Info.DisplayName);
+		Result.Session.SessionSettings.Get(FName("SCORE_LIMIT"), Info.ScoreLimit);
+
+		// Add to the Output Array
+		Out.Add(Info);
+	}
+	
+	// Return the Output Array
+	return Out;
 }
