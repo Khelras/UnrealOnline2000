@@ -49,10 +49,18 @@ protected:
 	UPROPERTY(EditAnywhere, Category="Input")
 	UInputAction* MouseLookAction;
 
+	UPROPERTY(Replicated)
+	float ControlPitch = 0.0f;
+
 public:
 
 	/** Constructor */
 	AUnrealOnline2000Character();	
+
+	virtual void Tick(float _DeltaTime) override;
+
+	UFUNCTION(BlueprintPure)
+	float GetReplicatedPitch();
 
 protected:
 

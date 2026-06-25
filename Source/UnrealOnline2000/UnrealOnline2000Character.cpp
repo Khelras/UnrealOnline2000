@@ -11,6 +11,7 @@
 #include "EnhancedInputSubsystems.h"
 #include "InputActionValue.h"
 #include "UnrealOnline2000.h"
+#include "Net/UnrealNetwork.h"
 
 AUnrealOnline2000Character::AUnrealOnline2000Character()
 {
@@ -48,6 +49,26 @@ AUnrealOnline2000Character::AUnrealOnline2000Character()
 
 	// Note: The skeletal mesh and anim blueprint references on the Mesh component (inherited from Character) 
 	// are set in the derived blueprint asset named ThirdPersonCharacter (to avoid direct content references in C++)
+}
+
+void AUnrealOnline2000Character::Tick(float _DeltaTime)
+{
+	Super::Tick(_DeltaTime);
+
+	if (HasAuthority() == true)
+	{
+		ControlPitch = GetControlRotation().Pitch;
+	}
+}
+
+float AUnrealOnline2000Character::GetReplicatedPitch()
+{
+	if (IsLocallyControlled() == true)
+	{
+		return GetControlRotation().Pitch;
+	}
+
+	return ControlPitch;
 }
 
 void AUnrealOnline2000Character::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
@@ -130,4 +151,11 @@ void AUnrealOnline2000Character::DoJumpEnd()
 {
 	// signal the character to stop jumping
 	StopJumping();
+}
+
+void AUnrealOnline2000Character::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+
+	DOREPLIFETIME(AUnrealOnline2000Character, ControlPitch);
 }
