@@ -11,7 +11,10 @@
 #include "EnhancedInputSubsystems.h"
 #include "InputActionValue.h"
 #include "UnrealOnline2000.h"
+#include "UO_Projectile.h"
+#include "UO_PlayerState.h"
 #include "Net/UnrealNetwork.h"
+#include "UnrealOnline2000PlayerController.h"
 
 AUnrealOnline2000Character::AUnrealOnline2000Character()
 {
@@ -71,6 +74,23 @@ float AUnrealOnline2000Character::GetReplicatedPitch()
 	return ControlPitch;
 }
 
+void AUnrealOnline2000Character::UO_TakeDamage(float _Damage, AUO_PlayerState* _PlayerThatDealtDamage)
+{
+	// Take Damage
+	Health -= _Damage;
+
+	if (Health <= 0.0f)
+	{
+		// Clamp to 0
+		Health = 0.0f;
+
+		_PlayerThatDealtDamage->GiveElimination();
+
+		// Die
+		Die();
+	}
+}
+
 void AUnrealOnline2000Character::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 {
 	// Set up action bindings
@@ -86,6 +106,9 @@ void AUnrealOnline2000Character::SetupPlayerInputComponent(UInputComponent* Play
 
 		// Looking
 		EnhancedInputComponent->BindAction(LookAction, ETriggerEvent::Triggered, this, &AUnrealOnline2000Character::Look);
+
+		// Attacking
+		EnhancedInputComponent->BindAction(AttackAction, ETriggerEvent::Started, this, &AUnrealOnline2000Character::Attack);
 	}
 	else
 	{
@@ -109,6 +132,34 @@ void AUnrealOnline2000Character::Look(const FInputActionValue& Value)
 
 	// route the input
 	DoLook(LookAxisVector.X, LookAxisVector.Y);
+}
+
+void AUnrealOnline2000Character::Attack(const FInputActionValue& Value)
+{
+	ServerAttack();
+}
+
+void AUnrealOnline2000Character::Die()
+{
+	// Respawning
+	GetController<AUnrealOnline2000PlayerController>()->RespawnAfterDelay();
+
+	Destroy();
+}
+
+void AUnrealOnline2000Character::ServerAttack_Implementation()
+{
+	// Spawn Tranforms
+	FTransform SpawnTransform;
+	SpawnTransform.SetLocation(GetMesh()->GetBoneLocation("hand_l"));
+	SpawnTransform.SetRotation(GetControlRotation().Quaternion());
+
+	// Spawn Parameters
+	FActorSpawnParameters SpawnParams;
+	SpawnParams.Owner = this;
+
+	// Spawn the Projection
+	AUO_Projectile* SpawnedProjectile = GetWorld()->SpawnActor<AUO_Projectile>(ProjectileClass, SpawnTransform, SpawnParams);
 }
 
 void AUnrealOnline2000Character::DoMove(float Right, float Forward)
@@ -158,4 +209,5 @@ void AUnrealOnline2000Character::GetLifetimeReplicatedProps(TArray<FLifetimeProp
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
 	DOREPLIFETIME(AUnrealOnline2000Character, ControlPitch);
+	DOREPLIFETIME(AUnrealOnline2000Character, Health);
 }

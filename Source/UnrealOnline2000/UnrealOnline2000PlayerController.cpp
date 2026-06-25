@@ -8,6 +8,7 @@
 #include "Blueprint/UserWidget.h"
 #include "UnrealOnline2000.h"
 #include "Widgets/Input/SVirtualJoystick.h"
+#include "UO_GameMode_Match.h"
 
 void AUnrealOnline2000PlayerController::BeginPlay()
 {
@@ -64,4 +65,17 @@ bool AUnrealOnline2000PlayerController::ShouldUseTouchControls() const
 {
 	// are we on a mobile platform? Should we force touch?
 	return SVirtualJoystick::ShouldDisplayTouchInterface() || bForceTouchControls;
+}
+
+void AUnrealOnline2000PlayerController::RespawnAfterDelay()
+{
+	GetWorldTimerManager().SetTimer(RespawnTimer, this, &AUnrealOnline2000PlayerController::TryRespawn, 5.0f, false);
+}
+
+void AUnrealOnline2000PlayerController::TryRespawn()
+{
+	if (AUO_GameMode_Match* GameMode = Cast<AUO_GameMode_Match>(GetWorld()->GetAuthGameMode()))
+	{
+		GameMode->RespawnPlayer(this);
+	}
 }

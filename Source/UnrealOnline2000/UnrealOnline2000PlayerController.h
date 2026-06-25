@@ -49,4 +49,14 @@ protected:
 	/** Returns true if the player should use UMG touch controls */
 	bool ShouldUseTouchControls() const;
 
+public:
+	// Respawn after a Delay
+	void RespawnAfterDelay();
+
+protected:
+	// Calls the GameMode to Try to Respawn
+	void TryRespawn();
+
+	// Handle used for the Timer to Respawn
+	FTimerHandle RespawnTimer;
 };

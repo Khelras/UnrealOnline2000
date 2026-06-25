@@ -49,8 +49,16 @@ protected:
 	UPROPERTY(EditAnywhere, Category="Input")
 	UInputAction* MouseLookAction;
 
+	/** Attack Input Action */
+	UPROPERTY(EditAnywhere, Category="Input")
+	UInputAction* AttackAction;
+
 	UPROPERTY(Replicated)
 	float ControlPitch = 0.0f;
+
+	// The Class of the Projectile to Spawn
+	UPROPERTY(EditDefaultsOnly, Category = "Projectile")
+	TSubclassOf<class AUO_Projectile> ProjectileClass = nullptr;
 
 public:
 
@@ -61,6 +69,8 @@ public:
 
 	UFUNCTION(BlueprintPure)
 	float GetReplicatedPitch();
+
+	void UO_TakeDamage(float _Damage, class AUO_PlayerState* _PlayerThatDealtDamage);
 
 protected:
 
@@ -74,6 +84,20 @@ protected:
 
 	/** Called for looking input */
 	void Look(const FInputActionValue& Value);
+
+	/** Called for attack input */
+	void Attack(const FInputActionValue& Value);
+
+	UFUNCTION(Server, Reliable)
+	void ServerAttack();
+
+	void Die();
+
+	UPROPERTY(BlueprintReadOnly, Category="Player")
+	float MaxHealth = 100.0f;
+
+	UPROPERTY(Replicated, BlueprintReadOnly, Category="Player")
+	float Health = MaxHealth;
 
 public:
 
