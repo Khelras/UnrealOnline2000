@@ -98,9 +98,10 @@ bool UUO_GameInstance::HostSession(TSharedPtr<const FUniqueNetId> _userID, FName
 	SessionSettings->bShouldAdvertise = true;
 	SessionSettings->bAllowJoinViaPresence = true;
 	SessionSettings->bAllowJoinViaPresenceFriendsOnly = false;
-	
+	SessionSettings->bUseLobbiesIfAvailable = true;
+
 	// Set the Session Map
-	SessionSettings->Set(SETTING_MAPNAME, FString("Lvl_ThirdPerson"), EOnlineDataAdvertisementType::ViaOnlineService);
+	SessionSettings->Set(SEARCH_KEYWORDS, FString("Custom"), EOnlineDataAdvertisementType::ViaOnlineService);
 
 	// Create the Session
 	return SessionInterface->CreateSession(*_userID, _sessionName, *SessionSettings);
@@ -118,6 +119,10 @@ void UUO_GameInstance::FindSessions(TSharedPtr<const FUniqueNetId> _userID, bool
 	SessionSearch->MaxSearchResults = 10000;
 	SessionSearch->PingBucketSize = 50;
 	
+	// Set the Session Search Query Settings
+	SessionSearch->QuerySettings.Set(SEARCH_LOBBIES, true, EOnlineComparisonOp::Equals);
+	SessionSearch->QuerySettings.Set(SEARCH_KEYWORDS, FString("Custom"), EOnlineComparisonOp::Equals);
+
 	// Find Sessions
 	SessionInterface->FindSessions(*_userID, SessionSearch.ToSharedRef());
 }
