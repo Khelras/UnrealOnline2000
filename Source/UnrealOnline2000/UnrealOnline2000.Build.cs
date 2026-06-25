@@ -18,10 +18,17 @@ public class UnrealOnline2000 : ModuleRules
 			"StateTreeModule",
 			"GameplayStateTreeModule",
 			"UMG",
-			"Slate"
+			"Slate",
+			"OnlineSubsystem",
+			"OnlineSubsystemUtils",
+			"NetCore"
 		});
 
-		PrivateDependencyModuleNames.AddRange(new string[] { });
+        DynamicallyLoadedModuleNames.AddRange(new string[] {
+            "OnlineSubsystemNull"
+        });
+
+        PrivateDependencyModuleNames.AddRange(new string[] { });
 
 		PublicIncludePaths.AddRange(new string[] {
 			"UnrealOnline2000"
