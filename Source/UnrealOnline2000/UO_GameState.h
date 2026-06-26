@@ -8,6 +8,17 @@
 
 class AUO_PlayerState;
 
+// Struct for Player Leaderboard Entry
+USTRUCT(BlueprintType)
+struct FPlayerLeaderboardEntry
+{
+	GENERATED_BODY()
+
+	UPROPERTY(BlueprintReadOnly) FString PlayerName;
+	UPROPERTY(BlueprintReadOnly) int32 Score;
+	UPROPERTY(BlueprintReadOnly) bool bIsOnHill;
+};
+
 /**
  * 
  */
@@ -17,12 +28,21 @@ class UNREALONLINE2000_API AUO_GameState : public AGameState
 	GENERATED_BODY()
 	
 protected:
-	UPROPERTY(Replicated)
+	UPROPERTY(Replicated, BlueprintReadOnly, Category="Match")
 	AUO_PlayerState* WinningPlayer = nullptr;
 
 public:
+	UFUNCTION(BlueprintCallable, Category="Match")
+	TArray<FString> GetConnectedPlayerNames() const;
+
+	UPROPERTY(Replicated, BlueprintReadOnly, Category="Match")
+	int32 ScoreLimit = 100; // Default to 100
+
+	UFUNCTION(BlueprintCallable, BlueprintPure, Category="Match")
+	TArray<FPlayerLeaderboardEntry> GetTopPlayers() const;
+
 	void SetWinner(AUO_PlayerState* _Winner);
 
 	UFUNCTION(BlueprintPure)
-	AUO_PlayerState* GetWinner();
+	AUO_PlayerState* GetWinner() const { return WinningPlayer; };
 };

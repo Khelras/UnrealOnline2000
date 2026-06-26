@@ -62,6 +62,7 @@ protected:
 	UFUNCTION()
 	void NetworkFailureOccurred(UWorld* _world, UNetDriver* _netDriver, ENetworkFailure::Type _failureType, const FString& _errorString);
 
+	FKOTHSessionSettings HostSettings;
 	TSharedPtr<FOnlineSessionSettings> SessionSettings;
 	TSharedPtr<FOnlineSessionSearch> SessionSearch;
 

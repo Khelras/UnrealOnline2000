@@ -69,7 +69,7 @@ bool AUnrealOnline2000PlayerController::ShouldUseTouchControls() const
 
 void AUnrealOnline2000PlayerController::RespawnAfterDelay()
 {
-	GetWorldTimerManager().SetTimer(RespawnTimer, this, &AUnrealOnline2000PlayerController::TryRespawn, 5.0f, false);
+	GetWorldTimerManager().SetTimer(RespawnTimer, this, &AUnrealOnline2000PlayerController::TryRespawn, RespawnDelay, false);
 }
 
 void AUnrealOnline2000PlayerController::TryRespawn()

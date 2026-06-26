@@ -15,6 +15,13 @@ class UNREALONLINE2000_API AUO_GameMode_Match : public AGameMode
 	GENERATED_BODY()
 	
 protected:
+	virtual void InitGame(const FString& MapName, const FString& Options, FString& ErrorMessage) override;
+	virtual void PostLogin(APlayerController* NewPlayer) override;
+	virtual bool ReadyToStartMatch_Implementation() override;
+
+	UPROPERTY(BlueprintReadOnly, Category="Match")
+	int32 ScoreLimit = 100; // Default to 100
+
 	// Called whe the Match Game State enters WaitingPostMatch
 	virtual void HandleMatchHasEnded() override;
 
@@ -22,6 +29,9 @@ protected:
 	FTimerHandle MatchRestartDelayTimer;
 
 public:
+	UFUNCTION(BlueprintCallable, Category="Match")
+	void HostStartMatch();
+
 	void RespawnPlayer(APlayerController* _PlayerToRespawn);
 	void CheckForWinner();
 };

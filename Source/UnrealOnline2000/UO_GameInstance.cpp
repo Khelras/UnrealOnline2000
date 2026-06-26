@@ -30,13 +30,19 @@ void UUO_GameInstance::OnCreateSessionComplete(FName _sessionName, bool _bSucces
 	// Session was Successfully Created
 	if (_bSuccess == true)
 	{
-		FString LevelOptions = "Lvl_ThirdPerson?listen";
+		FString LevelOptions = FString::Printf(
+			TEXT("?listen?ScoreLimit=%d?MaxPlayers=%d"),
+			HostSettings.ScoreLimit,
+			HostSettings.MaxPlayers
+		);
+
+		// LAN Flag
 		if (SessionSettings->bIsLANMatch == true) LevelOptions.Append("?bIsLanMatch=1");
 
 		GEngine->AddOnScreenDebugMessage(-1, 10.f, FColor::Green,
 			FString::Printf(TEXT("Session created! Travelling with: %s"), *LevelOptions));
 
-		GetWorld()->ServerTravel(LevelOptions);
+		GetWorld()->ServerTravel(TEXT("Lvl_ThirdPerson") + LevelOptions);
 	}
 }
 
@@ -134,6 +140,8 @@ bool UUO_GameInstance::HostSession(FKOTHSessionSettings _HostSettings, bool _bIs
 	SessionSettings->Set(SEARCH_KEYWORDS, FString("Custom"), EOnlineDataAdvertisementType::ViaOnlineService);
 	SessionSettings->Set(FName("SESSION_DISPLAY_NAME"), _HostSettings.SessionName, EOnlineDataAdvertisementType::ViaOnlineServiceAndPing);
 	SessionSettings->Set(FName("SCORE_LIMIT"), _HostSettings.ScoreLimit, EOnlineDataAdvertisementType::ViaOnlineServiceAndPing);
+
+	HostSettings = _HostSettings;
 
 	return SessionInterface->CreateSession(0, NAME_GameSession, *SessionSettings);
 }

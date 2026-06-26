@@ -43,6 +43,9 @@ void AUO_Projectile::BeginPlay()
 		// Set the Player State
 		OwnerPlayerState = Cast<AUO_PlayerState>(OwnerCharacter->GetPlayerState());
 	}
+
+	// Auto Destroy after 5 Seconds
+	SetLifeSpan(5.0f);
 }
 
 void AUO_Projectile::OnProjectileHit(UPrimitiveComponent* _thisHitComp, AActor* _otherActor,
@@ -54,10 +57,10 @@ void AUO_Projectile::OnProjectileHit(UPrimitiveComponent* _thisHitComp, AActor* 
 		{
 			HitCharacter->UO_TakeDamage(Damage, OwnerPlayerState);
 		}
-
-		// Destroy the Projectile after hitting something
-		Destroy();
 	}
+
+	// Destroy the Projectile after hitting something
+	Destroy();
 }
 
 // Called every frame

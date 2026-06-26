@@ -79,6 +79,9 @@ void AUnrealOnline2000Character::UO_TakeDamage(float _Damage, AUO_PlayerState* _
 	// Take Damage
 	Health -= _Damage;
 
+	// Notify all Clients to play a Hit Reaction VFX/SFX
+	MulticastPlayHitReaction();
+
 	if (Health <= 0.0f)
 	{
 		// Clamp to 0
@@ -160,6 +163,11 @@ void AUnrealOnline2000Character::ServerAttack_Implementation()
 
 	// Spawn the Projection
 	AUO_Projectile* SpawnedProjectile = GetWorld()->SpawnActor<AUO_Projectile>(ProjectileClass, SpawnTransform, SpawnParams);
+}
+
+void AUnrealOnline2000Character::MulticastPlayHitReaction_Implementation()
+{
+	// TODO: Player VFX and SFX
 }
 
 void AUnrealOnline2000Character::DoMove(float Right, float Forward)

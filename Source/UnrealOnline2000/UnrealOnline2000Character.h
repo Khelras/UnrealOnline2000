@@ -53,9 +53,6 @@ protected:
 	UPROPERTY(EditAnywhere, Category="Input")
 	UInputAction* AttackAction;
 
-	UPROPERTY(Replicated)
-	float ControlPitch = 0.0f;
-
 	// The Class of the Projectile to Spawn
 	UPROPERTY(EditDefaultsOnly, Category = "Projectile")
 	TSubclassOf<class AUO_Projectile> ProjectileClass = nullptr;
@@ -67,9 +64,13 @@ public:
 
 	virtual void Tick(float _DeltaTime) override;
 
+	UPROPERTY(Replicated)
+	float ControlPitch = 0.0f;
+
 	UFUNCTION(BlueprintPure)
 	float GetReplicatedPitch();
 
+	// Called by the Damaging Projectile or other Damager
 	void UO_TakeDamage(float _Damage, class AUO_PlayerState* _PlayerThatDealtDamage);
 
 protected:
@@ -98,6 +99,10 @@ protected:
 
 	UPROPERTY(Replicated, BlueprintReadOnly, Category="Player")
 	float Health = MaxHealth;
+
+	// For VFX and SFX
+	UFUNCTION(NetMulticast, Unreliable)
+	void MulticastPlayHitReaction();
 
 public:
 

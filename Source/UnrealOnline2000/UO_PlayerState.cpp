@@ -22,9 +22,16 @@ void AUO_PlayerState::GiveElimination()
 	}
 }
 
-int AUO_PlayerState::GetEliminations()
+void AUO_PlayerState::AddHillScore(int32 Amount)
 {
-	return Eliminations;
+	if (HasAuthority() == false) return;
+	HillScore += Amount;
+
+	// Check for a Win
+	if (AUO_GameMode_Match* GameMode = GetWorld()->GetAuthGameMode<AUO_GameMode_Match>())
+	{
+		GameMode->CheckForWinner();
+	}
 }
 
 void AUO_PlayerState::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
@@ -32,4 +39,5 @@ void AUO_PlayerState::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutL
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
 	DOREPLIFETIME(AUO_PlayerState, Eliminations)
+	DOREPLIFETIME(AUO_PlayerState, HillScore)
 }

@@ -57,6 +57,10 @@ protected:
 	// Calls the GameMode to Try to Respawn
 	void TryRespawn();
 
+	// Respawn Delay in Seconds
+	UPROPERTY(EditDefaultsOnly, Category="Respawn")
+	float RespawnDelay = 3.0f;
+
 	// Handle used for the Timer to Respawn
 	FTimerHandle RespawnTimer;
 };

@@ -17,7 +17,10 @@ class UNREALONLINE2000_API AUO_PlayerState : public APlayerState
 protected:
 	// The current amount of Eliminations the Player has
 	UPROPERTY(Replicated)
-	int Eliminations = 0;
+	int32 Eliminations = 0;
+
+	UPROPERTY(Replicated, BlueprintReadOnly, Category = "Score")
+	int32 HillScore = 0;
 
 public:
 	// Adds an Elimination
@@ -25,5 +28,8 @@ public:
 	
 	// Returns the Amount of Eliminations
 	UFUNCTION(BlueprintPure)
-	int GetEliminations();
+	int32 GetEliminations() { return Eliminations; };
+
+	void AddHillScore(int32 Amount);
+	int32 GetHillScore() const { return HillScore; };
 };
