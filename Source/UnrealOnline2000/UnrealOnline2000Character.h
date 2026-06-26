@@ -73,6 +73,10 @@ public:
 	// Called by the Damaging Projectile or other Damager
 	void UO_TakeDamage(float _Damage, class AUO_PlayerState* _PlayerThatDealtDamage);
 
+	float GetMaxHealth() { return MaxHealth; };
+	float GetHealth() { return Health; };
+	void Heal(float hp) { Health = hp; };
+
 protected:
 
 	/** Initialize input action bindings */
@@ -99,10 +103,6 @@ protected:
 
 	UPROPERTY(Replicated, BlueprintReadOnly, Category="Player")
 	float Health = MaxHealth;
-
-	// For VFX and SFX
-	UFUNCTION(NetMulticast, Unreliable)
-	void MulticastPlayHitReaction();
 
 public:
 
