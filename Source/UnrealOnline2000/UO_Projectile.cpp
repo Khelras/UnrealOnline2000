@@ -59,8 +59,16 @@ void AUO_Projectile::OnProjectileHit(UPrimitiveComponent* _thisHitComp, AActor* 
 		}
 	}
 
+	// HIt SFX
+	Multicast_PlayHitEffect_Implementation();
+
 	// Destroy the Projectile after hitting something
 	Destroy();
+}
+
+void AUO_Projectile::Multicast_PlayHitEffect_Implementation()
+{
+	OnHit();
 }
 
 // Called every frame

@@ -158,8 +158,16 @@ void AUnrealOnline2000Character::ServerAttack_Implementation()
 	FActorSpawnParameters SpawnParams;
 	SpawnParams.Owner = this;
 
-	// Spawn the Projection
+	// Play Shooting SFX
+	Multicast_PlayShootEffect_Implementation();
+
+	// Spawn the Projectile
 	AUO_Projectile* SpawnedProjectile = GetWorld()->SpawnActor<AUO_Projectile>(ProjectileClass, SpawnTransform, SpawnParams);
+}
+
+void AUnrealOnline2000Character::Multicast_PlayShootEffect_Implementation()
+{
+	OnShoot();
 }
 
 void AUnrealOnline2000Character::DoMove(float Right, float Forward)

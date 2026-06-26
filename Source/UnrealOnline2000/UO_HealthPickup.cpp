@@ -75,13 +75,18 @@ void AUO_HealthPickup::Respawn()
 {
     bIsActive = true;
     OnRep_IsActive(); // Server-Local Update
+    Multicast_PlayRespawnEffect_Implementation(); // SFX
 }
 
 void AUO_HealthPickup::Multicast_PlayPickupEffect_Implementation()
 {
-    // TODO: Heal SFX
+    OnPickupCollected();
 }
 
+void AUO_HealthPickup::Multicast_PlayRespawnEffect_Implementation()
+{
+    OnRespawn();
+}
 // Called every frame
 void AUO_HealthPickup::Tick(float DeltaTime)
 {

@@ -96,6 +96,12 @@ protected:
 	UFUNCTION(Server, Reliable)
 	void ServerAttack();
 
+	UFUNCTION(NetMulticast, Unreliable)
+	void Multicast_PlayShootEffect();
+
+	UFUNCTION(BlueprintImplementableEvent, Category="Player")
+	void OnShoot();
+
 	void Die();
 
 	UPROPERTY(BlueprintReadOnly, Category="Player")

@@ -19,23 +19,23 @@ protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 
-    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Pickup")
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Pickup")
     class USphereComponent* OverlapSphere;
 
-    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Pickup")
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Pickup")
     class UStaticMeshComponent* PickupMesh;
 
     // Replicated — OnRep drives visibility for all clients
-    UPROPERTY(ReplicatedUsing = OnRep_IsActive, BlueprintReadOnly, Category = "Pickup")
+    UPROPERTY(ReplicatedUsing = OnRep_IsActive, BlueprintReadOnly, Category="Pickup")
     bool bIsActive = true;
 
     UFUNCTION()
     void OnRep_IsActive();
 
-    UPROPERTY(EditDefaultsOnly, Category = "Pickup")
+    UPROPERTY(EditDefaultsOnly, Category="Pickup")
     float HealAmount = 50.f;
 
-    UPROPERTY(EditDefaultsOnly, Category = "Pickup")
+    UPROPERTY(EditDefaultsOnly, Category="Pickup")
     float RespawnTime = 10.f;
 
     FTimerHandle RespawnTimerHandle;
@@ -46,9 +46,17 @@ protected:
 
     void Respawn();
 
-    // Blueprint hook for VFX/sound on pickup
     UFUNCTION(NetMulticast, Unreliable)
     void Multicast_PlayPickupEffect();
+    
+    UFUNCTION(BlueprintImplementableEvent, Category="Pickup")
+    void OnPickupCollected();
+
+    UFUNCTION(NetMulticast, Unreliable)
+    void Multicast_PlayRespawnEffect();
+
+    UFUNCTION(BlueprintImplementableEvent, Category="Pickup")
+    void OnRespawn();
 
 public:	
 	// Called every frame

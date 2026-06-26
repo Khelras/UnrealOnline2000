@@ -38,6 +38,12 @@ protected:
 	void OnProjectileHit(UPrimitiveComponent* _thisHitComp, AActor* _otherActor,
 		UPrimitiveComponent* _otherHitComp, FVector _normalImpulse, const FHitResult& _hitResult);
 
+	UFUNCTION(NetMulticast, Unreliable)
+	void Multicast_PlayHitEffect();
+
+	UFUNCTION(BlueprintImplementableEvent, Category="Projectile")
+	void OnHit();
+
 	UPROPERTY()
 	class AUO_PlayerState* OwnerPlayerState = nullptr;
 
